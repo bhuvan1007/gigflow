@@ -112,7 +112,7 @@ export const hireFreelancer = async (req, res) => {
             const freelancerSocketId = global.onlineUsers.get(bid.freelancerId.toString());
             if (freelancerSocketId) {
                 req.io.to(freelancerSocketId).emit("notification", {
-                    message: `🎉 You have been hired for "${gig.title}"!`
+                    message: `Congrats, you have been hired as a ${gig.title}`
                 });
             }
         } catch (socketErr) {

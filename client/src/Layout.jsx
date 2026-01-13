@@ -12,11 +12,12 @@ const Layout = () => {
     useEffect(() => {
         if (currentUser) {
             const socket = io("http://localhost:8800");
+            const notificationQueue = [];
 
             socket.emit("addUser", currentUser._id);
 
-            socket.on("notification", (data) => {
-                toast.success(data.message, {
+            const showNotification = (message) => {
+                toast.success(message, {
                     duration: 5000,
                     icon: '🎉',
                     style: {
@@ -25,10 +26,32 @@ const Layout = () => {
                         color: '#fff',
                     },
                 });
+            };
+
+            const handleVisibilityChange = () => {
+                if (document.visibilityState === 'visible' && notificationQueue.length > 0) {
+                    notificationQueue.forEach(msg => showNotification(msg));
+                    notificationQueue.length = 0; // Clear queue
+                }
+            };
+
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+
+            socket.on("notification", (data) => {
+                // 1. Dispatch event so Gig page knows to refresh
+                window.dispatchEvent(new Event("gigJobUpdate"));
+
+                // 2. Handle Notification
+                if (document.hidden) {
+                    notificationQueue.push(data.message);
+                } else {
+                    showNotification(data.message);
+                }
             });
 
             return () => {
                 socket.disconnect();
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
             };
         }
     }, [currentUser]);

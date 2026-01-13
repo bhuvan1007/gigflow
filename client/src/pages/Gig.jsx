@@ -14,6 +14,7 @@ const Gig = () => {
     const [bids, setBids] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Bid Form State
     const [bidPrice, setBidPrice] = useState("");
@@ -45,6 +46,15 @@ const Gig = () => {
             });
         }
     }, [gig]);
+
+    // Listen for realtime updates from Layout
+    useEffect(() => {
+        const handleRealtimeUpdate = () => {
+            setRefreshTrigger(prev => prev + 1);
+        };
+        window.addEventListener("gigJobUpdate", handleRealtimeUpdate);
+        return () => window.removeEventListener("gigJobUpdate", handleRealtimeUpdate);
+    }, []);
 
     const handleDeleteGig = () => {
         setConfirmModal({
@@ -109,7 +119,7 @@ const Gig = () => {
             }
         };
         fetchGigAndBid();
-    }, [id, currentUser]);
+    }, [id, currentUser, refreshTrigger]);
 
     const handleBidSubmit = async (e) => {
         e.preventDefault();
